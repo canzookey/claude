@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倉庫管理システム - デモ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: white;
+            padding: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .nav button {
+            background: none;
+            border: none;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav button:hover {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .nav button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 40px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .stat-card.success {
+            border-left-color: #10b981;
+        }
+
+        .stat-card.danger {
+            border-left-color: #ef4444;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .stat-change.up {
+            color: #10b981;
+        }
+
+        .stat-change.down {
+            color: #ef4444;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge.low {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+
+        .badge.medium {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge.high {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        .badge.in {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+
+        .badge.out {
+            background-color: #fce7f3;
+            color: #db2777;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5568d3;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .barcode-display {
+            text-align: center;
+            padding: 30px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .barcode-image {
+            width: 300px;
+            height: 100px;
+            background: white;
+            border: 2px dashed #d1d5db;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Libre Barcode 128', cursive;
+            font-size: 48px;
+            letter-spacing: 2px;
+        }
+
+        .kanban-scanner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .kanban-scanner h2 {
+            margin-bottom: 20px;
+        }
+
+        .scanner-area {
+            background: white;
+            border-radius: 8px;
+            padding: 60px;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        .scanner-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏭 倉庫管理システム</h1>
+        <div class="subtitle">自動車部品製造向け統合管理プラットフォーム</div>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn active" data-page="dashboard">📊 ダッシュボード</button>
+        <button class="nav-btn" data-page="inventory">📦 在庫一覧</button>
+        <button class="nav-btn" data-page="inout">🔄 入出庫管理</button>
+        <button class="nav-btn" data-page="stocktaking">📋 棚卸</button>
+        <button class="nav-btn" data-page="label">🏷️ ラベル発行</button>
+        <button class="nav-btn" data-page="kanban">📱 ダミーかんばん</button>
+    </div>
+
+    <div class="container">
+        <!-- ダッシュボード -->
+        <div id="dashboard" class="page active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">総在庫点数</div>
+                    <div class="stat-value">24,537</div>
+                    <div class="stat-change up">↑ 前日比 +125点</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">要発注品目</div>
+                    <div class="stat-value">47</div>
+                    <div class="stat-change down">⚠️ 安全在庫未満</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-label">今日の入庫</div>
+                    <div class="stat-value">1,234</div>
+                    <div class="stat-change up">↑ 12件の入庫処理</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-label">今日の出庫</div>
+                    <div class="stat-value">987</div>
+                    <div class="stat-change">→ 8件の出庫処理</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🏭 工場別在庫状況</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>工場名</th>
+                            <th>在庫点数</th>
+                            <th>稼働率</th>
+                            <th>要発注</th>
+                            <th>状態</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>岐阜第一工場</td>
+                            <td>8,234</td>
+                            <td>92%</td>
+                            <td>15</td>
+                            <td><span class="badge high">正常</span></td>
+                        </tr>
+                        <tr>
+                            <td>岐阜第二工場</td>
+                            <td>9,156</td>
+                            <td>88%</td>
+                            <td>18</td>
+                            <td><span class="badge high">正常</span></td>
+                        </tr>
+                        <tr>
+                            <td>岐阜第三工場</td>
+                            <td>7,147</td>
+                            <td>85%</td>
+                            <td>14</td>
+                            <td><span class="badge medium">要注意</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📈 最近の入出庫動向</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日時</th>
+                            <th>種別</th>
+                            <th>品番</th>
+                            <th>品名</th>
+                            <th>数量</th>
+                            <th>担当者</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2026-03-17 10:23</td>
+                            <td><span class="badge in">入庫</span></td>
+                            <td>P-12345</td>
+                            <td>ボルトM6×20</td>
+                            <td>500</td>
+                            <td>田中</td>
+                        </tr>
+                        <tr>
+                            <td>2026-03-17 09:45</td>
+                            <td><span class="badge out">出庫</span></td>
+                            <td>P-12346</td>
+                            <td>ナットM6</td>
+                            <td>300</td>
+                            <td>佐藤</td>
+                        </tr>
+                        <tr>
+                            <td>2026-03-17 09:12</td>
+                            <td><span class="badge in">入庫</span></td>
+                            <td>P-12347</td>
+                            <td>ワッシャーM6</td>
+                            <td>800</td>
+                            <td>鈴木</td>
+                        </tr>
+                        <tr>
+                            <td>2026-03-17 08:50</td>
+                            <td><span class="badge out">出庫</span></td>
+                            <td>P-12348</td>
+                            <td>スプリングφ10</td>
+                            <td>150</td>
+                            <td>山田</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 在庫一覧 -->
+        <div id="inventory" class="page">
+            <div class="card">
+                <div class="card-title">📦 在庫一覧</div>
+
+                <div class="search-bar">
+                    <input type="text" placeholder="品番・品名で検索..." id="searchInventory">
+                    <select style="width: 200px;">
+                        <option>全工場</option>
+                        <option>岐阜第一工場</option>
+                        <option>岐阜第二工場</option>
+                        <option>岐阜第三工場</option>
+                    </select>
+                    <button class="btn btn-primary">🔍 検索</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>品番</th>
+                            <th>品名</th>
+                            <th>ロケーション</th>
+                            <th>現在庫数</th>
+                            <th>安全在庫</th>
+                            <th>単位</th>
+                            <th>状態</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>P-12345</td>
+                            <td>ボルトM6×20</td>
+                            <td>A-01-01</td>
+                            <td>2,500</td>
+                            <td>1,000</td>
+                            <td>個</td>
+                            <td><span class="badge high">適正</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">詳細</button></td>
+                        </tr>
+                        <tr>
+                            <td>P-12346</td>
+                            <td>ナットM6</td>
+                            <td>A-01-02</td>
+                            <td>450</td>
+                            <td>1,000</td>
+                            <td>個</td>
+                            <td><span class="badge low">要発注</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">詳細</button></td>
+                        </tr>
+                        <tr>
+                            <td>P-12347</td>
+                            <td>ワッシャーM6</td>
+                            <td>A-01-03</td>
+                            <td>3,200</td>
+                            <td>1,500</td>
+                            <td>個</td>
+                            <td><span class="badge high">適正</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">詳細</button></td>
+                        </tr>
+                        <tr>
+                            <td>P-12348</td>
+                            <td>スプリングφ10</td>
+                            <td>B-02-05</td>
+                            <td>850</td>
+                            <td>800</td>
+                            <td>個</td>
+                            <td><span class="badge medium">注意</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">詳細</button></td>
+                        </tr>
+                        <tr>
+                            <td>P-12349</td>
+                            <td>ガスケットφ15</td>
+                            <td>B-03-01</td>
+                            <td>1,200</td>
+                            <td>500</td>
+                            <td>個</td>
+                            <td><span class="badge high">適正</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">詳細</button></td>
+                        </tr>
+                        <tr>
+                            <td>P-12350</td>
+                            <td>ピン3×10</td>
+                            <td>C-01-08</td>
+                            <td>180</td>
+                            <td>500</td>
+                            <td>個</td>
+                            <td><span class="badge low">要発注</span></td>
+                            <td><button class="btn btn-secondary" style="padding: 5px 10px; font-size: 12px;">詳細</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 入出庫管理 -->
+        <div id="inout" class="page">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">📥 入庫処理</div>
+                    <form id="inboundForm">
+                        <div class="form-group">
+                            <label>品番 *</label>
+                            <input type="text" placeholder="P-12345" value="P-12345">
+                        </div>
+                        <div class="form-group">
+                            <label>品名</label>
+                            <input type="text" placeholder="自動取得" value="ボルトM6×20" readonly style="background-color: #f9fafb;">
+                        </div>
+                        <div class="form-group">
+                            <label>入庫数量 *</label>
+                            <input type="number" placeholder="数量を入力" value="500">
+                        </div>
+                        <div class="form-group">
+                            <label>ロケーション *</label>
+                            <select>
+                                <option>A-01-01</option>
+                                <option>A-01-02</option>
+                                <option>A-01-03</option>
+                                <option>B-02-05</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>備考</label>
+                            <textarea rows="3" placeholder="備考を入力（任意）"></textarea>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="showAlert('入庫処理が完了しました')">✓ 入庫登録</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📤 出庫処理</div>
+                    <form id="outboundForm">
+                        <div class="form-group">
+                            <label>品番 *</label>
+                            <input type="text" placeholder="P-12346" value="P-12346">
+                        </div>
+                        <div class="form-group">
+                            <label>品名</label>
+                            <input type="text" placeholder="自動取得" value="ナットM6" readonly style="background-color: #f9fafb;">
+                        </div>
+                        <div class="form-group">
+                            <label>出庫数量 *</label>
+                            <input type="number" placeholder="数量を入力" value="300">
+                        </div>
+                        <div class="form-group">
+                            <label>出庫先</label>
+                            <select>
+                                <option>製造ライン1</option>
+                                <option>製造ライン2</option>
+                                <option>製造ライン3</option>
+                                <option>検査工程</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>備考</label>
+                            <textarea rows="3" placeholder="備考を入力（任意）"></textarea>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="showAlert('出庫処理が完了しました')">✓ 出庫登録</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📊 本日の入出庫履歴</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>時刻</th>
+                            <th>種別</th>
+                            <th>品番</th>
+                            <th>品名</th>
+                            <th>数量</th>
+                            <th>ロケーション</th>
+                            <th>担当者</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>10:23</td>
+                            <td><span class="badge in">入庫</span></td>
+                            <td>P-12345</td>
+                            <td>ボルトM6×20</td>
+                            <td>500</td>
+                            <td>A-01-01</td>
+                            <td>田中</td>
+                        </tr>
+                        <tr>
+                            <td>09:45</td>
+                            <td><span class="badge out">出庫</span></td>
+                            <td>P-12346</td>
+                            <td>ナットM6</td>
+                            <td>300</td>
+                            <td>A-01-02</td>
+                            <td>佐藤</td>
+                        </tr>
+                        <tr>
+                            <td>09:12</td>
+                            <td><span class="badge in">入庫</span></td>
+                            <td>P-12347</td>
+                            <td>ワッシャーM6</td>
+                            <td>800</td>
+                            <td>A-01-03</td>
+                            <td>鈴木</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 棚卸 -->
+        <div id="stocktaking" class="page">
+            <div class="alert alert-info">
+                <span style="font-size: 20px;">ℹ️</span>
+                <div>
+                    <strong>棚卸実施中</strong><br>
+                    2026年3月期 第1回棚卸（進捗: 35% / 完了予定: 2026-03-20）
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📋 棚卸実施</div>
+
+                <div class="form-group">
+                    <label>ロケーション選択</label>
+                    <select style="width: 100%;">
+                        <option>A-01-01</option>
+                        <option>A-01-02</option>
+                        <option>A-01-03</option>
+                        <option>B-02-05</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>品番（バーコードスキャン可）</label>
+                    <input type="text" placeholder="品番を入力またはスキャン" value="P-12345">
+                </div>
+
+                <div class="form-group">
+                    <label>実地棚卸数</label>
+                    <input type="number" placeholder="実際の在庫数を入力" value="2485">
+                </div>
+
+                <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>帳簿在庫:</span>
+                        <strong>2,500個</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>実地在庫:</span>
+                        <strong>2,485個</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 2px solid #d1d5db; padding-top: 10px;">
+                        <span><strong>差異:</strong></span>
+                        <strong style="color: #ef4444;">-15個</strong>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>備考</label>
+                    <textarea rows="3" placeholder="差異理由などを入力"></textarea>
+                </div>
+
+                <button type="button" class="btn btn-success" onclick="showAlert('棚卸データを登録しました')">✓ 棚卸登録</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📊 棚卸進捗状況</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ロケーション</th>
+                            <th>予定品目数</th>
+                            <th>完了品目数</th>
+                            <th>進捗率</th>
+                            <th>担当者</th>
+                            <th>状態</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>A-01</td>
+                            <td>150</td>
+                            <td>150</td>
+                            <td>100%</td>
+                            <td>田中</td>
+                            <td><span class="badge high">完了</span></td>
+                        </tr>
+                        <tr>
+                            <td>A-02</td>
+                            <td>200</td>
+                            <td>120</td>
+                            <td>60%</td>
+                            <td>佐藤</td>
+                            <td><span class="badge medium">実施中</span></td>
+                        </tr>
+                        <tr>
+                            <td>B-01</td>
+                            <td>180</td>
+                            <td>45</td>
+                            <td>25%</td>
+                            <td>鈴木</td>
+                            <td><span class="badge medium">実施中</span></td>
+                        </tr>
+                        <tr>
+                            <td>B-02</td>
+                            <td>220</td>
+                            <td>0</td>
+                            <td>0%</td>
+                            <td>山田</td>
+                            <td><span class="badge low">未着手</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ラベル発行 -->
+        <div id="label" class="page">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-title">🏷️ ラベル情報入力</div>
+                    <form id="labelForm">
+                        <div class="form-group">
+                            <label>品番 *</label>
+                            <input type="text" placeholder="P-12345" value="P-12345">
+                        </div>
+                        <div class="form-group">
+                            <label>品名</label>
+                            <input type="text" placeholder="自動取得" value="ボルトM6×20" readonly style="background-color: #f9fafb;">
+                        </div>
+                        <div class="form-group">
+                            <label>ロケーション</label>
+                            <select>
+                                <option>A-01-01</option>
+                                <option>A-01-02</option>
+                                <option>A-01-03</option>
+                                <option>B-02-05</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>数量</label>
+                            <input type="number" value="500">
+                        </div>
+                        <div class="form-group">
+                            <label>ロット番号</label>
+                            <input type="text" placeholder="LOT20260317-001" value="LOT20260317-001">
+                        </div>
+                        <div class="form-group">
+                            <label>プリンター</label>
+                            <select>
+                                <option>Brother QL-820NWB (工場A)</option>
+                                <option>Brother QL-820NWB (工場B)</option>
+                                <option>Brother QL-820NWB (工場C)</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="showAlert('ラベルを印刷しました（Brother QL-820NWB）')">🖨️ ラベル印刷</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📄 プレビュー</div>
+                    <div style="border: 2px solid #d1d5db; border-radius: 8px; padding: 20px; background: white;">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <div style="font-size: 11px; color: #666; margin-bottom: 5px;">品番</div>
+                            <div style="font-size: 18px; font-weight: bold;">P-12345</div>
+                        </div>
+                        <div style="border: 2px dashed #d1d5db; padding: 30px 10px; margin: 15px 0; text-align: center; background: #f9fafb;">
+                            <div style="font-family: monospace; font-size: 24px; letter-spacing: 3px;">|||  |||  ||  |||</div>
+                            <div style="font-size: 12px; margin-top: 5px; color: #666;">P-12345-LOT20260317-001</div>
+                        </div>
+                        <div style="font-size: 12px; line-height: 1.6; color: #333;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>品名:</span>
+                                <strong>ボルトM6×20</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>ロケーション:</span>
+                                <strong>A-01-01</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>数量:</span>
+                                <strong>500個</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>発行日:</span>
+                                <strong>2026-03-17</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                        <div style="font-size: 13px; color: #1e40af;">
+                            <strong>🖨️ Brother対応</strong><br>
+                            Brother QL-820NWBラベルプリンターに最適化されたフォーマットです。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📋 最近の印刷履歴</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日時</th>
+                            <th>品番</th>
+                            <th>品名</th>
+                            <th>ロット番号</th>
+                            <th>プリンター</th>
+                            <th>担当者</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2026-03-17 10:15</td>
+                            <td>P-12345</td>
+                            <td>ボルトM6×20</td>
+                            <td>LOT20260317-001</td>
+                            <td>Brother QL-820NWB (A)</td>
+                            <td>田中</td>
+                        </tr>
+                        <tr>
+                            <td>2026-03-17 09:50</td>
+                            <td>P-12346</td>
+                            <td>ナットM6</td>
+                            <td>LOT20260317-002</td>
+                            <td>Brother QL-820NWB (B)</td>
+                            <td>佐藤</td>
+                        </tr>
+                        <tr>
+                            <td>2026-03-17 09:30</td>
+                            <td>P-12347</td>
+                            <td>ワッシャーM6</td>
+                            <td>LOT20260317-003</td>
+                            <td>Brother QL-820NWB (A)</td>
+                            <td>鈴木</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ダミーかんばん -->
+        <div id="kanban" class="page">
+            <div class="card kanban-scanner">
+                <h2>📱 ダミーかんばん 自動入庫</h2>
+                <p style="margin-bottom: 30px;">ダミーかんばんのバーコードをスキャンすると、自動的に入庫処理が実行されます</p>
+
+                <div class="scanner-area">
+                    <div class="scanner-icon">📷</div>
+                    <h3 style="margin-bottom: 10px;">バーコードをスキャンしてください</h3>
+                    <p style="color: #666; margin-bottom: 20px;">タブレット・スマートフォンのカメラまたはバーコードリーダーを使用</p>
+                    <button class="btn btn-primary" style="font-size: 16px; padding: 12px 30px;" onclick="simulateScan()">🔍 スキャンをシミュレート</button>
+                </div>
+            </div>
+
+            <div id="scanResult" style="display: none;">
+                <div class="alert alert-success">
+                    <span style="font-size: 24px;">✓</span>
+                    <div>
+                        <strong>自動入庫完了</strong><br>
+                        <span id="scanResultText"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📊 ダミーかんばん入庫履歴</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>日時</th>
+                            <th>かんばん番号</th>
+                            <th>品番</th>
+                            <th>品名</th>
+                            <th>入庫数量</th>
+                            <th>ロケーション</th>
+                            <th>状態</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kanbanHistory">
+                        <tr>
+                            <td>2026-03-17 10:05</td>
+                            <td>KB-20260317-001</td>
+                            <td>P-12345</td>
+                            <td>ボルトM6×20</td>
+                            <td>500</td>
+                            <td>A-01-01</td>
+                            <td><span class="badge high">完了</span></td>
+                        </tr>
+                        <tr>
+                            <td>2026-03-17 09:32</td>
+                            <td>KB-20260317-002</td>
+                            <td>P-12346</td>
+                            <td>ナットM6</td>
+                            <td>300</td>
+                            <td>A-01-02</td>
+                            <td><span class="badge high">完了</span></td>
+                        </tr>
+                        <tr>
+                            <td>2026-03-17 09:01</td>
+                            <td>KB-20260317-003</td>
+                            <td>P-12347</td>
+                            <td>ワッシャーM6</td>
+                            <td>800</td>
+                            <td>A-01-03</td>
+                            <td><span class="badge high">完了</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-title">💡 ダミーかんばんとは</div>
+                <div style="line-height: 1.8; color: #374151;">
+                    <p style="margin-bottom: 15px;">
+                        <strong>ダミーかんばん</strong>は、製品や部品に付属するバーコード付きのカード・タグです。
+                    </p>
+                    <ol style="padding-left: 20px;">
+                        <li style="margin-bottom: 10px;">製品にダミーかんばん（バーコード付きタグ）を添付</li>
+                        <li style="margin-bottom: 10px;">入庫時にタブレットやバーコードリーダーでスキャン</li>
+                        <li style="margin-bottom: 10px;">システムが自動的に入庫処理を実行</li>
+                        <li style="margin-bottom: 10px;">手入力不要で、ミス防止・作業効率化を実現</li>
+                    </ol>
+                    <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border-radius: 6px; border-left: 4px solid #10b981;">
+                        <strong>✓ メリット</strong><br>
+                        • 入庫作業の時間短縮（手入力の1/10以下）<br>
+                        • 入力ミスの削減<br>
+                        • リアルタイムな在庫反映
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ページ切り替え
+        document.querySelectorAll('.nav-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetPage = this.getAttribute('data-page');
+
+                // すべてのページを非表示
+                document.querySelectorAll('.page').forEach(page => {
+                    page.classList.remove('active');
+                });
+
+                // すべてのボタンを非アクティブ
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // 選択されたページを表示
+                document.getElementById(targetPage).classList.add('active');
+                this.classList.add('active');
+            });
+        });
+
+        // アラート表示
+        function showAlert(message) {
+            alert('✓ ' + message);
+        }
+
+        // スキャンシミュレーション
+        function simulateScan() {
+            const scanResult = document.getElementById('scanResult');
+            const scanResultText = document.getElementById('scanResultText');
+
+            // ランダムなデータを生成
+            const items = [
+                { kanban: 'KB-20260317-004', partNo: 'P-12349', name: 'ガスケットφ15', qty: 1200, location: 'B-03-01' },
+                { kanban: 'KB-20260317-005', partNo: 'P-12350', name: 'ピン3×10', qty: 600, location: 'C-01-08' },
+                { kanban: 'KB-20260317-006', partNo: 'P-12351', name: 'クリップφ8', qty: 900, location: 'A-02-05' }
+            ];
+
+            const item = items[Math.floor(Math.random() * items.length)];
+            const now = new Date();
+            const timeStr = now.getFullYear() + '-' +
+                          String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                          String(now.getDate()).padStart(2, '0') + ' ' +
+                          String(now.getHours()).padStart(2, '0') + ':' +
+                          String(now.getMinutes()).padStart(2, '0');
+
+            scanResultText.innerHTML = `
+                かんばん番号: ${item.kanban}<br>
+                品番: ${item.partNo} / 品名: ${item.name}<br>
+                数量: ${item.qty}個 / ロケーション: ${item.location}
+            `;
+
+            scanResult.style.display = 'block';
+
+            // 履歴テーブルに追加
+            const tbody = document.getElementById('kanbanHistory');
+            const newRow = tbody.insertRow(0);
+            newRow.innerHTML = `
+                <td>${timeStr}</td>
+                <td>${item.kanban}</td>
+                <td>${item.partNo}</td>
+                <td>${item.name}</td>
+                <td>${item.qty}</td>
+                <td>${item.location}</td>
+                <td><span class="badge high">完了</span></td>
+            `;
+
+            // 数秒後にアラートを非表示
+            setTimeout(() => {
+                scanResult.style.display = 'none';
+            }, 5000);
+        }
+
+        // 検索機能（デモ用）
+        document.getElementById('searchInventory')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            // 実際のアプリケーションではここで検索処理を実装
+            console.log('検索:', searchTerm);
+        });
+    </script>
+</body>
+</html>
