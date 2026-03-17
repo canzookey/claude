@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倉庫管理システム - イメージデモ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* サイドバー */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .logo {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid #34495e;
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            font-size: 20px;
+            color: #3498db;
+        }
+
+        .logo p {
+            font-size: 12px;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background-color: #34495e;
+        }
+
+        .menu-item.active {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            display: inline-block;
+        }
+
+        /* メインコンテンツ */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background-color: #ecf0f1;
+        }
+
+        .header {
+            background-color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            color: #2c3e50;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info span {
+            color: #7f8c8d;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* カード */
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        /* ダッシュボードグリッド */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        }
+
+        .stat-card.orange {
+            background: linear-gradient(135deg, #f09819 0%, #edde5d 100%);
+        }
+
+        .stat-card.red {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .stat-card h4 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        /* テーブル */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* ボタン */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #229954;
+        }
+
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        /* 検索バー */
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-bar input,
+        .search-bar select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* フォーム */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        /* バッジ */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* バーコード表示エリア */
+        .barcode-display {
+            text-align: center;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .barcode-image {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            letter-spacing: 2px;
+            margin: 20px 0;
+        }
+
+        /* チャート風表示 */
+        .chart-container {
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            gap: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, #3498db, #5dade2);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            min-height: 50px;
+        }
+
+        .chart-bar span {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 小出し在庫テーブル */
+        .korodashi-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .korodashi-item {
+            background-color: white;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .korodashi-item .location {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .korodashi-item .quantity {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .korodashi-item .max {
+            font-size: 12px;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- サイドバー -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>📦 倉庫管理システム</h1>
+                <p>Warehouse Management System</p>
+            </div>
+            <div class="menu-item active" onclick="showPage('dashboard')">
+                <i>📊</i> ダッシュボード
+            </div>
+            <div class="menu-item" onclick="showPage('inventory')">
+                <i>📋</i> 在庫一覧
+            </div>
+            <div class="menu-item" onclick="showPage('inout')">
+                <i>🔄</i> 入出庫管理
+            </div>
+            <div class="menu-item" onclick="showPage('korodashi')">
+                <i>📦</i> 小出し在庫管理
+            </div>
+            <div class="menu-item" onclick="showPage('stocktake')">
+                <i>✅</i> 棚卸
+            </div>
+            <div class="menu-item" onclick="showPage('location')">
+                <i>🗺️</i> ロケーション管理
+            </div>
+            <div class="menu-item" onclick="showPage('barcode')">
+                <i>🏷️</i> バーコード発行
+            </div>
+            <div class="menu-item" onclick="showPage('kanban')">
+                <i>📇</i> ダミーかんばん
+            </div>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="main-content">
+            <div class="header">
+                <h2 id="page-title">ダッシュボード</h2>
+                <div class="user-info">
+                    <span>工場1</span>
+                    <span>|</span>
+                    <span>👤 山田太郎</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- ダッシュボード -->
+                <div id="dashboard" class="page active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>総在庫点数</h4>
+                            <div class="value">24,583</div>
+                        </div>
+                        <div class="stat-card green">
+                            <h4>今日の入庫</h4>
+                            <div class="value">156</div>
+                        </div>
+                        <div class="stat-card orange">
+                            <h4>今日の出庫</h4>
+                            <div class="value">89</div>
+                        </div>
+                        <div class="stat-card red">
+                            <h4>在庫アラート</h4>
+                            <div class="value">12</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>工場別在庫推移</h3>
+                        <div class="chart-container">
+                            <div class="chart-bar" style="height: 80%;">
+                                <span>工場1</span>
+                            </div>
+                            <div class="chart-bar" style="height: 65%;">
+                                <span>工場2</span>
+                            </div>
+                            <div class="chart-bar" style="height: 90%;">
+                                <span>工場3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>最近の入出庫履歴</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>日時</th>
+                                        <th>区分</th>
+                                        <th>品番</th>
+                                        <th>品名</th>
+                                        <th>数量</th>
+                                        <th>ロケーション</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2026-03-17 14:30</td>
+                                        <td><span class="badge badge-success">入庫</span></td>
+                                        <td>P-12345</td>
+                                        <td>金具A (M6×20)</td>
+                                        <td>50</td>
+                                        <td>A-01-03</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-03-17 14:15</td>
+                                        <td><span class="badge badge-warning">出庫</span></td>
+                                        <td>P-12346</td>
+                                        <td>金具B (M8×25)</td>
+                                        <td>30</td>
+                                        <td>A-01-05</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-03-17 13:45</td>
+                                        <td><span class="badge badge-success">入庫</span></td>
+                                        <td>P-12347</td>
+                                        <td>ボルトC (M10×30)</td>
+                                        <td>100</td>
+                                        <td>B-02-01</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 在庫一覧 -->
+                <div id="inventory" class="page">
+                    <div class="card">
+                        <div class="search-bar">
+                            <input type="text" placeholder="品番・品名で検索...">
+                            <select>
+                                <option>全ロケーション</option>
+                                <option>A棟</option>
+                                <option>B棟</option>
+                                <option>C棟</option>
+                            </select>
+                            <select>
+                                <option>全ステータス</option>
+                                <option>正常在庫</option>
+                                <option>在庫アラート</option>
+                                <option>欠品</option>
+                            </select>
+                            <button class="btn btn-primary">🔍 検索</button>
+                            <button class="btn btn-success">📥 CSVダウンロード</button>
+                        </div>
+
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>品番</th>
+                                        <th>品名</th>
+                                        <th>現在庫</th>
+                                        <th>安全在庫</th>
+                                        <th>ロケーション</th>
+                                        <th>ステータス</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>P-12345</td>
+                                        <td>金具A (M6×20)</td>
+                                        <td>1,250</td>
+                                        <td>500</td>
+                                        <td>A-01-03</td>
+                                        <td><span class="badge badge-success">正常</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm">詳細</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>P-12346</td>
+                                        <td>金具B (M8×25)</td>
+                                        <td>380</td>
+                                        <td>500</td>
+                                        <td>A-01-05</td>
+                                        <td><span class="badge badge-warning">アラート</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm">詳細</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>P-12347</td>
+                                        <td>ボルトC (M10×30)</td>
+                                        <td>2,100</td>
+                                        <td>1,000</td>
+                                        <td>B-02-01</td>
+                                        <td><span class="badge badge-success">正常</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm">詳細</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>P-12348</td>
+                                        <td>ナットD (M6)</td>
+                                        <td>50</td>
+                                        <td>300</td>
+                                        <td>B-02-03</td>
+                                        <td><span class="badge badge-danger">欠品寸前</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm">詳細</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>P-12349</td>
+                                        <td>ワッシャーE (M8)</td>
+                                        <td>1,800</td>
+                                        <td>600</td>
+                                        <td>C-03-02</td>
+                                        <td><span class="badge badge-success">正常</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm">詳細</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 入出庫管理 -->
+                <div id="inout" class="page">
+                    <div class="card">
+                        <h3>入出庫登録</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>区分 *</label>
+                                <select>
+                                    <option>入庫</option>
+                                    <option>出庫</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>日付 *</label>
+                                <input type="date" value="2026-03-17">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>品番 *</label>
+                                <input type="text" placeholder="バーコードスキャンまたは手入力">
+                            </div>
+                            <div class="form-group">
+                                <label>品名</label>
+                                <input type="text" readonly value="(品番選択後自動表示)">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>数量 *</label>
+                                <input type="number" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label>ロケーション *</label>
+                                <select>
+                                    <option>A-01-01</option>
+                                    <option>A-01-02</option>
+                                    <option>A-01-03</option>
+                                    <option>B-02-01</option>
+                                    <option>C-03-01</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>備考</label>
+                            <textarea rows="3" placeholder="入出庫に関する備考を入力"></textarea>
+                        </div>
+                        <button class="btn btn-primary">✅ 登録</button>
+                        <button class="btn btn-warning" style="margin-left: 10px;">🔄 クリア</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>本日の入出庫一覧</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>時刻</th>
+                                        <th>区分</th>
+                                        <th>品番</th>
+                                        <th>品名</th>
+                                        <th>数量</th>
+                                        <th>ロケーション</th>
+                                        <th>担当者</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>14:30</td>
+                                        <td><span class="badge badge-success">入庫</span></td>
+                                        <td>P-12345</td>
+                                        <td>金具A (M6×20)</td>
+                                        <td>50</td>
+                                        <td>A-01-03</td>
+                                        <td>山田太郎</td>
+                                    </tr>
+                                    <tr>
+                                        <td>14:15</td>
+                                        <td><span class="badge badge-warning">出庫</span></td>
+                                        <td>P-12346</td>
+                                        <td>金具B (M8×25)</td>
+                                        <td>30</td>
+                                        <td>A-01-05</td>
+                                        <td>鈴木花子</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 小出し在庫管理 -->
+                <div id="korodashi" class="page">
+                    <div class="card">
+                        <h3>小出し在庫状況</h3>
+                        <p style="color: #7f8c8d; margin-bottom: 20px;">作業現場の小出し在庫をリアルタイムで管理</p>
+
+                        <div class="korodashi-table">
+                            <div class="korodashi-item">
+                                <div class="location">A-01-03</div>
+                                <div style="font-size: 12px; color: #2c3e50;">金具A</div>
+                                <div class="quantity">85</div>
+                                <div class="max">/ 100個</div>
+                                <button class="btn btn-success btn-sm" style="margin-top: 10px;">補充</button>
+                            </div>
+                            <div class="korodashi-item">
+                                <div class="location">A-02-05</div>
+                                <div style="font-size: 12px; color: #2c3e50;">金具B</div>
+                                <div class="quantity" style="color: #e74c3c;">15</div>
+                                <div class="max">/ 50個</div>
+                                <button class="btn btn-danger btn-sm" style="margin-top: 10px;">緊急補充</button>
+                            </div>
+                            <div class="korodashi-item">
+                                <div class="location">B-01-02</div>
+                                <div style="font-size: 12px; color: #2c3e50;">ボルトC</div>
+                                <div class="quantity">180</div>
+                                <div class="max">/ 200個</div>
+                                <button class="btn btn-success btn-sm" style="margin-top: 10px;">補充</button>
+                            </div>
+                            <div class="korodashi-item">
+                                <div class="location">B-03-01</div>
+                                <div style="font-size: 12px; color: #2c3e50;">ナットD</div>
+                                <div class="quantity" style="color: #f39c12;">25</div>
+                                <div class="max">/ 100個</div>
+                                <button class="btn btn-warning btn-sm" style="margin-top: 10px;">要補充</button>
+                            </div>
+                            <div class="korodashi-item">
+                                <div class="location">C-02-03</div>
+                                <div style="font-size: 12px; color: #2c3e50;">ワッシャーE</div>
+                                <div class="quantity">290</div>
+                                <div class="max">/ 300個</div>
+                                <button class="btn btn-success btn-sm" style="margin-top: 10px;">補充</button>
+                            </div>
+                            <div class="korodashi-item">
+                                <div class="location">C-04-01</div>
+                                <div style="font-size: 12px; color: #2c3e50;">スプリングF</div>
+                                <div class="quantity">45</div>
+                                <div class="max">/ 50個</div>
+                                <button class="btn btn-success btn-sm" style="margin-top: 10px;">補充</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>小出し在庫補充</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>小出しロケーション</label>
+                                <select>
+                                    <option>A-01-03 (金具A)</option>
+                                    <option>A-02-05 (金具B)</option>
+                                    <option>B-01-02 (ボルトC)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>補充数量</label>
+                                <input type="number" value="50">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary">🔄 補充実行</button>
+                    </div>
+                </div>
+
+                <!-- 棚卸 -->
+                <div id="stocktake" class="page">
+                    <div class="card">
+                        <h3>棚卸実施</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>棚卸日</label>
+                                <input type="date" value="2026-03-17">
+                            </div>
+                            <div class="form-group">
+                                <label>対象エリア</label>
+                                <select>
+                                    <option>全エリア</option>
+                                    <option>A棟</option>
+                                    <option>B棟</option>
+                                    <option>C棟</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary">📋 棚卸開始</button>
+                        <button class="btn btn-success" style="margin-left: 10px;">📥 前回データ読込</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>棚卸入力</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>品番（バーコード）</label>
+                                <input type="text" placeholder="バーコードスキャン">
+                            </div>
+                            <div class="form-group">
+                                <label>実在庫数</label>
+                                <input type="number" placeholder="実際の在庫数を入力">
+                            </div>
+                        </div>
+                        <button class="btn btn-success">✅ 登録</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>棚卸結果（差異あり）</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>品番</th>
+                                        <th>品名</th>
+                                        <th>帳簿在庫</th>
+                                        <th>実在庫</th>
+                                        <th>差異</th>
+                                        <th>差異率</th>
+                                        <th>ステータス</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>P-12346</td>
+                                        <td>金具B (M8×25)</td>
+                                        <td>380</td>
+                                        <td>350</td>
+                                        <td style="color: #e74c3c;">-30</td>
+                                        <td>-7.9%</td>
+                                        <td><span class="badge badge-warning">要確認</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>P-12348</td>
+                                        <td>ナットD (M6)</td>
+                                        <td>50</td>
+                                        <td>65</td>
+                                        <td style="color: #27ae60;">+15</td>
+                                        <td>+30.0%</td>
+                                        <td><span class="badge badge-warning">要確認</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top: 15px;">📊 差異分析レポート</button>
+                        <button class="btn btn-success" style="margin-left: 10px;">✅ 在庫確定</button>
+                    </div>
+                </div>
+
+                <!-- ロケーション管理 -->
+                <div id="location" class="page">
+                    <div class="card">
+                        <h3>ロケーションマップ</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
+                            <div style="border: 2px solid #3498db; border-radius: 8px; padding: 20px;">
+                                <h4 style="color: #2c3e50; margin-bottom: 15px;">🏢 A棟</h4>
+                                <div style="font-size: 14px; color: #7f8c8d;">
+                                    <div style="margin: 5px 0;">総ロケーション数: 50</div>
+                                    <div style="margin: 5px 0;">使用中: 42</div>
+                                    <div style="margin: 5px 0;">空き: 8</div>
+                                    <div style="margin: 5px 0; color: #27ae60; font-weight: bold;">使用率: 84%</div>
+                                </div>
+                            </div>
+                            <div style="border: 2px solid #27ae60; border-radius: 8px; padding: 20px;">
+                                <h4 style="color: #2c3e50; margin-bottom: 15px;">🏢 B棟</h4>
+                                <div style="font-size: 14px; color: #7f8c8d;">
+                                    <div style="margin: 5px 0;">総ロケーション数: 60</div>
+                                    <div style="margin: 5px 0;">使用中: 55</div>
+                                    <div style="margin: 5px 0;">空き: 5</div>
+                                    <div style="margin: 5px 0; color: #e74c3c; font-weight: bold;">使用率: 92%</div>
+                                </div>
+                            </div>
+                            <div style="border: 2px solid #f39c12; border-radius: 8px; padding: 20px;">
+                                <h4 style="color: #2c3e50; margin-bottom: 15px;">🏢 C棟</h4>
+                                <div style="font-size: 14px; color: #7f8c8d;">
+                                    <div style="margin: 5px 0;">総ロケーション数: 45</div>
+                                    <div style="margin: 5px 0;">使用中: 30</div>
+                                    <div style="margin: 5px 0;">空き: 15</div>
+                                    <div style="margin: 5px 0; color: #27ae60; font-weight: bold;">使用率: 67%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>ロケーション一覧</h3>
+                        <div class="search-bar">
+                            <input type="text" placeholder="ロケーション検索...">
+                            <select>
+                                <option>全棟</option>
+                                <option>A棟</option>
+                                <option>B棟</option>
+                                <option>C棟</option>
+                            </select>
+                            <button class="btn btn-primary">🔍 検索</button>
+                            <button class="btn btn-success">➕ 新規ロケーション</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ロケーションコード</th>
+                                        <th>棟</th>
+                                        <th>列</th>
+                                        <th>段</th>
+                                        <th>保管品番</th>
+                                        <th>保管品名</th>
+                                        <th>ステータス</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>A-01-03</td>
+                                        <td>A棟</td>
+                                        <td>01</td>
+                                        <td>03</td>
+                                        <td>P-12345</td>
+                                        <td>金具A (M6×20)</td>
+                                        <td><span class="badge badge-success">使用中</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>A-01-05</td>
+                                        <td>A棟</td>
+                                        <td>01</td>
+                                        <td>05</td>
+                                        <td>P-12346</td>
+                                        <td>金具B (M8×25)</td>
+                                        <td><span class="badge badge-success">使用中</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>A-02-01</td>
+                                        <td>A棟</td>
+                                        <td>02</td>
+                                        <td>01</td>
+                                        <td>-</td>
+                                        <td>-</td>
+                                        <td><span class="badge badge-warning">空き</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>B-02-01</td>
+                                        <td>B棟</td>
+                                        <td>02</td>
+                                        <td>01</td>
+                                        <td>P-12347</td>
+                                        <td>ボルトC (M10×30)</td>
+                                        <td><span class="badge badge-success">使用中</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- バーコード発行 -->
+                <div id="barcode" class="page">
+                    <div class="card">
+                        <h3>バーコードラベル発行</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>品番</label>
+                                <select>
+                                    <option>P-12345 - 金具A (M6×20)</option>
+                                    <option>P-12346 - 金具B (M8×25)</option>
+                                    <option>P-12347 - ボルトC (M10×30)</option>
+                                    <option>P-12348 - ナットD (M6)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>発行枚数</label>
+                                <input type="number" value="1">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>プリンター</label>
+                                <select>
+                                    <option>Brother QL-820NWB (工場1)</option>
+                                    <option>Brother QL-820NWB (工場2)</option>
+                                    <option>Brother QL-820NWB (工場3)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>ラベルサイズ</label>
+                                <select>
+                                    <option>62mm × 29mm</option>
+                                    <option>62mm × 100mm</option>
+                                    <option>102mm × 152mm</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary">🖨️ 印刷</button>
+                        <button class="btn btn-success" style="margin-left: 10px;">👁️ プレビュー</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>ラベルプレビュー</h3>
+                        <div class="barcode-display">
+                            <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">金具A (M6×20)</div>
+                            <div class="barcode-image">|||  ||  |  ||  |||  ||  |  |||</div>
+                            <div style="font-family: 'Courier New', monospace; font-size: 16px; margin-top: 10px;">P-12345</div>
+                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 15px;">
+                                ロケーション: A-01-03 | 発行日: 2026-03-17
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>発行履歴</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>発行日時</th>
+                                        <th>品番</th>
+                                        <th>品名</th>
+                                        <th>枚数</th>
+                                        <th>プリンター</th>
+                                        <th>担当者</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>2026-03-17 15:20</td>
+                                        <td>P-12345</td>
+                                        <td>金具A (M6×20)</td>
+                                        <td>5</td>
+                                        <td>Brother QL-820NWB (工場1)</td>
+                                        <td>山田太郎</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2026-03-17 14:50</td>
+                                        <td>P-12347</td>
+                                        <td>ボルトC (M10×30)</td>
+                                        <td>3</td>
+                                        <td>Brother QL-820NWB (工場1)</td>
+                                        <td>鈴木花子</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ダミーかんばん -->
+                <div id="kanban" class="page">
+                    <div class="card">
+                        <h3>ダミーかんばん管理</h3>
+                        <p style="color: #7f8c8d; margin-bottom: 20px;">ダミーかんばんをスキャンすることで自動的に入庫処理を実行</p>
+
+                        <div class="form-group">
+                            <label>かんばんバーコード</label>
+                            <input type="text" placeholder="かんばんのバーコードをスキャン" style="font-size: 18px; padding: 15px;">
+                        </div>
+                        <button class="btn btn-primary" style="font-size: 16px; padding: 15px 30px;">🔍 かんばん読込 & 自動入庫</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>かんばん一覧</h3>
+                        <div class="search-bar">
+                            <input type="text" placeholder="かんばん番号・品番で検索...">
+                            <button class="btn btn-primary">🔍 検索</button>
+                            <button class="btn btn-success">➕ 新規かんばん</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>かんばん番号</th>
+                                        <th>品番</th>
+                                        <th>品名</th>
+                                        <th>標準数量</th>
+                                        <th>発注点</th>
+                                        <th>納入ロケーション</th>
+                                        <th>ステータス</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>KB-001</td>
+                                        <td>P-12345</td>
+                                        <td>金具A (M6×20)</td>
+                                        <td>100</td>
+                                        <td>500</td>
+                                        <td>A-01-03</td>
+                                        <td><span class="badge badge-success">有効</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>KB-002</td>
+                                        <td>P-12346</td>
+                                        <td>金具B (M8×25)</td>
+                                        <td>50</td>
+                                        <td>300</td>
+                                        <td>A-01-05</td>
+                                        <td><span class="badge badge-success">有効</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>KB-003</td>
+                                        <td>P-12347</td>
+                                        <td>ボルトC (M10×30)</td>
+                                        <td>200</td>
+                                        <td>1000</td>
+                                        <td>B-02-01</td>
+                                        <td><span class="badge badge-success">有効</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>KB-004</td>
+                                        <td>P-12348</td>
+                                        <td>ナットD (M6)</td>
+                                        <td>100</td>
+                                        <td>300</td>
+                                        <td>B-02-03</td>
+                                        <td><span class="badge badge-warning">要補充</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>本日のかんばん入庫実績</h3>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>時刻</th>
+                                        <th>かんばん番号</th>
+                                        <th>品番</th>
+                                        <th>品名</th>
+                                        <th>数量</th>
+                                        <th>ロケーション</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>14:30</td>
+                                        <td>KB-001</td>
+                                        <td>P-12345</td>
+                                        <td>金具A (M6×20)</td>
+                                        <td>100</td>
+                                        <td>A-01-03</td>
+                                    </tr>
+                                    <tr>
+                                        <td>13:15</td>
+                                        <td>KB-003</td>
+                                        <td>P-12347</td>
+                                        <td>ボルトC (M10×30)</td>
+                                        <td>200</td>
+                                        <td>B-02-01</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            // すべてのページを非表示
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+
+            // すべてのメニューアイテムの選択を解除
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+
+            // 選択されたページを表示
+            document.getElementById(pageId).classList.add('active');
+
+            // 選択されたメニューアイテムをハイライト
+            event.target.classList.add('active');
+
+            // ページタイトルを更新
+            const titles = {
+                'dashboard': 'ダッシュボード',
+                'inventory': '在庫一覧',
+                'inout': '入出庫管理',
+                'korodashi': '小出し在庫管理',
+                'stocktake': '棚卸',
+                'location': 'ロケーション管理',
+                'barcode': 'バーコード発行',
+                'kanban': 'ダミーかんばん'
+            };
+            document.getElementById('page-title').textContent = titles[pageId];
+        }
+    </script>
+</body>
+</html>
